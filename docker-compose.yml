@@ -19,14 +19,15 @@ services:
   
   # OpenWebUI - Interfaz web para modelos de IA
   openwebui:
-    image: ghcr.io/open-webui/open-webui:latest
+    image: ghcr.io/open-webui/open-webui:main
     container_name: openwebui
     restart: unless-stopped
     ports:
       - "3000:8080"
     environment:
       # Configuración general
-      - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY}
+      - ENV=prod
+      - 'WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY}'
       # Conectividad con LiteLLM
       - ENABLE_OPENAI_API=true
       - OPENAI_API_BASE_URL=http://litellm:4000/v1
@@ -38,15 +39,10 @@ services:
       - ENABLE_IMAGE_GENERATION=true
       - ENABLE_TAGS_GENERATION=true
       - ENABLE_MESSAGE_RATING=true
-    env_file:
-      - .env  
     extra_hosts:
       - host.docker.internal:host-gateway
     volumes:
-      - openwebui_data:/app/backend/data
-    depends_on:
-      - mcpo
-      - litellm
+      - open-webui:/app/backend/data
     networks:
       - ai-network
   
@@ -202,7 +198,7 @@ networks:
     driver: bridge
 
 volumes:
-  openwebui_data:
+  open-webui:
   docling_data:
   n8n_data:
   pg_litellm_data:
