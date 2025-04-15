@@ -1,0 +1,211 @@
+version: '3'
+services:
+  # Flowise - No/low code AI agent builder
+  flowise:
+    image: flowiseai/flowise
+    restart: unless-stopped
+    container_name: flowise
+    environment:
+      - PORT=3001
+    ports:
+      - 3001:3001
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ~/.flowise:/root/.flowise
+    entrypoint: /bin/sh -c "sleep 3; flowise start"
+    networks:
+      - ai-network
+  
+  # OpenWebUI - Interfaz web para modelos de IA
+  openwebui:
+    image: ghcr.io/open-webui/open-webui:latest
+    container_name: openwebui
+    restart: unless-stopped
+    ports:
+      - "3000:8080"
+    environment:
+      # Configuración general
+      - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY}
+      # Conectividad con LiteLLM
+      - ENABLE_OPENAI_API=true
+      - OPENAI_API_BASE_URL=http://litellm:4000/v1
+      - OPENAI_API_KEY=${LITELLM_MASTER_KEY}
+      # Funcionalidades
+      - ENABLE_ADMIN_EXPORT=true
+      - ENABLE_SEARCH_QUERY_GENERATION=true
+      - ENABLE_WEB_SEARCH=true
+      - ENABLE_IMAGE_GENERATION=true
+      - ENABLE_TAGS_GENERATION=true
+      - ENABLE_MESSAGE_RATING=true
+    env_file:
+      - .env  
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    volumes:
+      - openwebui_data:/app/backend/data
+    depends_on:
+      - mcpo
+      - litellm
+    networks:
+      - ai-network
+  
+  # LiteLLM - Proxy para manejar diferentes modelos de IA
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    container_name: litellm
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pg_litellm:5432/litellm
+      - STORE_MODEL_IN_DB=True
+    env_file:
+      - .env
+    volumes:
+      - ./configs/litellm/litellm_config.yaml:/app/litellm_config.yaml
+    #command: "--config /app/litellm_config.yaml"
+    networks:
+      - ai-network
+    depends_on:
+      - pg_litellm
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:4000/health/liveliness || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  pg_litellm:
+    image: postgres:16
+    restart: always
+    environment:
+      - POSTGRES_DB=litellm
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env  
+    volumes:
+      - pg_litellm_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d litellm -U postgres"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    networks:
+      - ai-network
+  
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - prometheus_data:/prometheus
+      - ./configs/litellm/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+    restart: always
+    networks:
+      - ai-network
+  
+  # MCPO - Modelo LLM local
+  mcpo:
+    image: ghcr.io/open-webui/mcpo:main
+    container_name: mcpo
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./configs/mcpo/config.json:/app/config.json
+    command: -c /app/config.json --host 0.0.0.0 --port 8000 --cors-allow-origins "*"
+    networks:
+      - ai-network
+  
+  # Docling - Gestión de documentos para IA
+  docling:
+    image: quay.io/docling-project/docling-serve
+    container_name: docling
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    environment:
+      - DOCLING_SERVE_ENABLE_UI=true
+    volumes:
+      - docling_data:/data
+    networks:
+      - ai-network
+  
+  # n8n - Automatización de flujos de trabajo
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
+      - TZ=${GENERIC_TIMEZONE}
+      - DB_POSTGRESDB_DATABASE=n8n
+      - DB_POSTGRESDB_HOST=pg_n8n
+      - DB_POSTGRESDB_PORT=5433
+      - DB_POSTGRESDB_USER=${DB_POSTGRESDB_USER}
+      - DB_POSTGRESDB_PASSWORD=${DB_POSTGRESDB_PASSWORD}
+    env_file:
+      - .env  
+    depends_on:
+      - pg_n8n
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - ai-network
+  
+  pg_n8n:
+    image: postgres:16
+    restart: always
+    environment:
+      - POSTGRES_DB=n8n
+      - POSTGRES_USER=${DB_POSTGRESDB_USER}
+      - POSTGRES_PASSWORD=${DB_POSTGRESDB_PASSWORD}
+      - N8N_PERSONALIZATION_ENABLED=false
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - N8N_USER_MANAGEMENT_JWT_SECRET=${N8N_USER_MANAGEMENT_JWT_SECRET}
+    ports:
+      - "5433:5432"
+    env_file:
+      - .env  
+    volumes:
+      - pg_n8n_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d n8n -U ${DB_POSTGRESDB_USER}"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    networks:
+      - ai-network
+  
+  watchtower:
+    container_name: watchtower
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 86400 --cleanup
+    restart: unless-stopped
+    networks:
+      - ai-network
+
+networks:
+  ai-network:
+    driver: bridge
+
+volumes:
+  openwebui_data:
+  docling_data:
+  n8n_data:
+  pg_litellm_data:
+  pg_n8n_data:
+  prometheus_data:
+  flowise:

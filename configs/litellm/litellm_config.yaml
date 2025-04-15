@@ -1,0 +1,34 @@
+model_list:
+  - model_name: "anthropic/*"
+    litellm_params:
+      model: "anthropic/*"
+      api_key: os.environ/ANTHROPIC_API_KEY
+  - model_name: "openai/*"
+    litellm_params:
+      model: "openai/*"
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: "mistral/*"
+    litellm_params:
+      model: "mistral/*"
+      api_key: os.environ/MISTRAL_API_KEY
+  - model_name: "deepseek/*"
+    litellm_params:
+      model: "deepseek/*"
+      api_key: os.environ/DEEPSEEK_API_KEY
+  - model_name: "gemini/*"
+    litellm_params:
+      model: "gemini/*"
+      api_key: os.environ/GEMINI_API_KEY
+
+litellm_settings:
+  drop_params: True
+  num_retries: 5
+  request_timeout: 600
+  telemetry: False
+
+general_settings: 
+  master_key: os.environ/LITELLM_MASTER_KEY
+  proxy_budget_rescheduler_min_time: 60
+  proxy_budget_rescheduler_max_time: 64
+  proxy_batch_write_at: 1
+  database_connection_pool_limit: 10

@@ -1,0 +1,22 @@
+{
+    "mcpServers": {
+      "jetbrains": {
+      "command": "npx",
+      "args": ["-y", "@jetbrains/mcp-proxy"]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ]
+    }
+  },
+  "remoteServers": {
+    "jetbrains": {
+      "url": "http://192.168.1.2:63341"
+    },
+    "playwright": {
+      "url": "http://192.168.1.2:12345"
+    }
+  }
+}
