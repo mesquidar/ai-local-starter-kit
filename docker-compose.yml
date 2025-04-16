@@ -117,7 +117,9 @@ services:
       - "8000:8000"
     volumes:
       - ./configs/mcpo/config.json:/app/config.json
-    command: -c /app/config.json --host 0.0.0.0 --port 8000 --cors-allow-origins "*"
+    command: --port 8000 --api-key ${MCPO_API_KEY} -c /app/config.json
+    env_file:
+      - .env 
     networks:
       - ai-network
   
