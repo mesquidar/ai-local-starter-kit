@@ -1,22 +1,17 @@
 {
-    "mcpServers": {
-      "jetbrains": {
-      "command": "npx",
-      "args": ["-y", "@jetbrains/mcp-proxy"]
-    },
+  "mcpServers": {
     "playwright": {
-      "command": "npx",
-      "args": [
-        "@playwright/mcp@latest"
-      ]
-    }
-  },
-  "remoteServers": {
+      "url": "http://192.168.1.2:12345/sse"
+    },
     "jetbrains": {
-      "url": "http://192.168.1.2:63341"
-    },
-    "playwright": {
-      "url": "http://192.168.1.2:12345"
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@jetbrains/mcp-proxy"],
+      "env": {
+        "HOST": "192.168.1.2",
+        "IDE_PORT": "63341",
+        "LOG_ENABLED": "true"
+      }
     }
   }
 }
