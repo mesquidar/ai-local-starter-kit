@@ -110,7 +110,7 @@ To use local models hosted in LM Studio:
 Once the configuration is complete, start the services:
 
 ```bash
-docker-compose -p AI Local Starter Kit up -d
+docker-compose -p AI-Local-Starter-Kit up -d
 ```
 
 To verify that all services are running correctly:
