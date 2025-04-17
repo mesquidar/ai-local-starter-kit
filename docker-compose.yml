@@ -60,7 +60,7 @@ services:
       - .env
     volumes:
       - ./configs/litellm/litellm_config.yaml:/app/litellm_config.yaml
-    #command: "--config /app/litellm_config.yaml"
+    #command: --config /app/litellm_config.yaml --detailed-debug
     networks:
       - ai-network
     depends_on:
@@ -194,7 +194,66 @@ services:
     restart: unless-stopped
     networks:
       - ai-network
-
+      
+  ## KOKORO CPU MPS
+#  kokoro-tts:
+#    container_name: kokoro-tts
+#    image: ghcr.io/remsky/kokoro-fastapi-cpu
+#    restart: always
+#    ports:
+#      - "8880:8880"
+#    environment:
+#      - PYTHONPATH=/app:/app/api
+#      - DEVICE_TYPE=mps
+#      - PYTORCH_ENABLE_MPS_FALLBACK=1
+#      - PYTHONUNBUFFERED=1
+#      - ONNX_NUM_THREADS=10  # Maximize core usage for vectorized ops
+#      - ONNX_INTER_OP_THREADS=10  # Higher inter-op for parallel matrix operations
+#      - ONNX_EXECUTION_MODE=parallel
+#      - ONNX_OPTIMIZATION_LEVEL=all
+#      - ONNX_MEMORY_PATTERN=true
+#      - ONNX_ARENA_EXTEND_STRATEGY=kNextPowerOfTwo
+#    networks:
+#      - ai-network
+## KOKORO GPU NVIDIA SUPPORT
+#  kokoro-tts:
+#    container_name: kokoro-tts
+#    image: ghcr.io/remsky/kokoro-fastapi-gpu
+#    restart: always
+#    ports:
+#      - "8880:8880"
+#    environment:
+#      - PYTHONPATH=/app:/app/api
+#        - USE_GPU=true
+#        - PYTHONUNBUFFERED=1
+#    deploy:
+#      resources:
+#        reservations:
+#          devices:
+#            - driver: nvidia
+#              count: all
+#              capabilities: [ gpu ]
+              
+              
+## KOKORO CPU      
+  kokoro-tts-cpu:
+    container_name: kokoro-tts
+    image: ghcr.io/remsky/kokoro-fastapi-cpu
+    restart: always
+    ports:
+      - "8880:8880"
+    environment:
+      - PYTHONPATH=/app:/app/api
+      # ONNX Optimization Settings for vectorized operations
+      - ONNX_NUM_THREADS=8  # Maximize core usage for vectorized ops
+      - ONNX_INTER_OP_THREADS=4  # Higher inter-op for parallel matrix operations
+      - ONNX_EXECUTION_MODE=parallel
+      - ONNX_OPTIMIZATION_LEVEL=all
+      - ONNX_MEMORY_PATTERN=true
+      - ONNX_ARENA_EXTEND_STRATEGY=kNextPowerOfTwo
+    networks:
+      - ai-network
+      
 networks:
   ai-network:
     driver: bridge
