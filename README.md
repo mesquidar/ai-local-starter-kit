@@ -87,10 +87,7 @@ The MCPO service will fail if not properly configured:
    {
      "mcpServers": {
        "playwright": {
-         "command": "npx",
-         "args": [
-           "@playwright/mcp@latest"
-         ]
+         "url": "http://192.168.1.2:12345/sse"
        }
      }
    }
