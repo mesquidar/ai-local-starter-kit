@@ -65,15 +65,15 @@ Antes de iniciar los servicios, es **crucial** configurar las API Keys de los mo
    ```yaml
    # Ejemplo para OpenAI
    model_list:
-     - model_name: gpt-3.5-turbo
-       litellm_params:
-         model: openai/gpt-3.5-turbo
-         api_key: sk-xxxxxxxxxxxxxxxxxxxxxxxx
-   
-     - model_name: gpt-4
-       litellm_params:
-         model: openai/gpt-4
-         api_key: sk-xxxxxxxxxxxxxxxxxxxxxxxx
+   - model_name: o3-mini
+     litellm_params:
+       model: openai/o3-mini
+       api_key: sk-xxxxxxxxxxxxxxxxxxxxxxxx
+ 
+   - model_name: gpt-4o
+     litellm_params:
+       model: openai/gpt-4o
+       api_key: sk-xxxxxxxxxxxxxxxxxxxxxxxx
    
      # Agregar otros modelos según sea necesario
    ```
@@ -85,11 +85,15 @@ El servicio MCPO fallará si no se configura correctamente:
 1. Modifique el archivo `configs/mcpo/config.json` con la configuración adecuada para su hardware:
    ```json
    {
-     "model": "path/to/your/model",
-     "n_gpu_layers": 32,
-     "context_length": 4096,
-     "temperature": 0.7
-   }
+      "mcpServers": {
+        "playwright": {
+          "command": "npx",
+          "args": [
+            "@playwright/mcp@latest"
+          ]
+        }
+      }
+    }
    ```
 
 #### 🖥️ Utilizar Modelos Locales con LM Studio
