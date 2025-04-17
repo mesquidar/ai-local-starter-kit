@@ -65,15 +65,15 @@ Before starting the services, it's **crucial** to configure the API Keys for the
    ```yaml
    # Example for OpenAI
    model_list:
-     - model_name: gpt-3.5-turbo
-       litellm_params:
-         model: openai/gpt-3.5-turbo
-         api_key: sk-xxxxxxxxxxxxxxxxxxxxxxxx
-   
-     - model_name: gpt-4
-       litellm_params:
-         model: openai/gpt-4
-         api_key: sk-xxxxxxxxxxxxxxxxxxxxxxxx
+   - model_name: o3-mini
+     litellm_params:
+       model: openai/o3-mini
+       api_key: sk-xxxxxxxxxxxxxxxxxxxxxxxx
+ 
+   - model_name: gpt-4o
+     litellm_params:
+       model: openai/gpt-4o
+       api_key: sk-xxxxxxxxxxxxxxxxxxxxxxxx
    
      # Add other models as needed
    ```
@@ -85,10 +85,14 @@ The MCPO service will fail if not properly configured:
 1. Modify the `configs/mcpo/config.json` file with the appropriate configuration for your hardware:
    ```json
    {
-     "model": "path/to/your/model",
-     "n_gpu_layers": 32,
-     "context_length": 4096,
-     "temperature": 0.7
+     "mcpServers": {
+       "playwright": {
+         "command": "npx",
+         "args": [
+           "@playwright/mcp@latest"
+         ]
+       }
+     }
    }
    ```
 
