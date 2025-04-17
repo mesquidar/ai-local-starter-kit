@@ -47,7 +47,7 @@ El kit incluye los siguientes servicios:
 
 1. Clone el repositorio:
    ```bash
-   git clone https://[url-del-repositorio]/ai-local-starter-kit.git
+   git clone https://mesquidar/ai-local-starter-kit.git
    cd ai-local-starter-kit
    ```
 
